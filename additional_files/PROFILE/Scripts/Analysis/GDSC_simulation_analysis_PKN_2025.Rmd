@@ -1,0 +1,131 @@
+---
+title: "GDSC_mutasMutants_RNAasTrans_simulation_analysis_PKN"
+author: "Arnau Montagud"
+date: "November 2025 - Run `r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+original_path <- normalizePath(getwd())
+base_folder <- dirname(dirname(original_path))
+
+knitr::opts_knit$set(root.dir = base_folder)
+if (!require("futile.logger")) install.packages("futile.logger")
+futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
+
+```
+
+```{r packages, echo=FALSE, message=FALSE, warning=FALSE}
+if (!require("pacman")) install.packages("pacman")
+list.of.packages <- c("tidyverse", "RColorBrewer", "VennDiagram", "knitr", "gridExtra", "magrittr", "ggplot2", "ggExtra", "ggalt", "corrplot", "caret", "survival", "ggfortify", "tsne", "survminer", "timeROC", "risksetROC", "survAUC", "mclust")
+pacman::p_load(list.of.packages, character.only = TRUE)
+
+tbl_to_df <- function(x){
+  x <- x %>% as.data.frame %>%  remove_rownames %>% column_to_rownames(var="PATIENT_ID")
+}
+rename <- dplyr::rename
+select <- dplyr::select
+tibble_transpose <- function(df_input){
+  df_output <- df_input %>% gather(var, value, -Hugo_Symbol) %>%
+    spread(Hugo_Symbol, value) %>%
+    rename(PATIENT_ID=var) %>% 
+    type_convert
+}
+
+```
+
+```{r DataImport, echo=FALSE, message=FALSE, warning=FALSE}
+plot_3d <- TRUE
+
+pheno <- c("Survival","MYC","Cell_cycle","Caspase8","Caspase9")
+
+tabfiles <- paste("./Results/Simulations/results_GDSC_mutasMutants_RNAasTrans_PKN.txt",sep="")
+for(i in 1:length(tabfiles)){
+  a1<- read.table(tabfiles[i], header = TRUE, row.names=2, sep=" ", stringsAsFactors=FALSE, fill = TRUE)
+  a1<-a1[,-c(1,2,ncol(a1))]
+  if(i==1){
+    tab <- a1
+  }else{
+    tab <- cbind(tab,a1[rownames(tab),])
+  }
+}
+simulations <- tab
+
+#Nodes filter
+#Low variation
+var_nodes <- sapply(simulations, function(x) max(x, na.rm = T)-min(x, na.rm = T)) > 0.01
+#One distant outlier
+simu_dig <- round(simulations, digits = 2)
+no_dis_out <- !sapply(simu_dig, function(x) any(table(x)==dim(simulations)[1]-1))
+#All
+index <- var_nodes & no_dis_out
+print("Number of variant nodes:")
+print(sum(index))
+print("out of")
+print(dim(simulations)[2])
+
+simulations <- simulations[,index]
+rownames(simulations)<-sub("-01","",rownames(simulations))
+#Import TCGA clinical data
+#Limit survival data to 120 months
+limit <- 120
+
+# CL_clin <-read_delim("../../Data/CL/Clin_GDSC_table1.txt", delim = "\t") 
+# CL_clin <-read_delim("../../Data/CL/Clin_GDSC_table1.txt", delim = "\t") 
+CL_clin <-read_delim("./Data/CL/Clin_GDSC_table1.txt", delim = "\t") 
+CL_clin <-read_delim("./Data/CL/Clin_GDSC_table1.txt", delim = "\t") 
+colnames(CL_clin)[1]<-"PATIENT_ID"
+colnames(CL_clin)[2]<-"COSMIC_ID"
+# CL_clin2 <-read_delim("../../Data/CL/Clin_GDSC_table2.txt", delim = "\t")
+CL_clin2 <-read_delim("./Data/CL/Clin_GDSC_table2.txt", delim = "\t")
+colnames(CL_clin2)[1]<-"PATIENT_ID"
+CL_clin%<>% left_join(.,CL_clin2)
+rm(CL_clin2)
+
+# genenames <- read.table("../../Models/PKN/PKN_genes.txt",header=T,sep="\t")
+genenames <- read.table("./Models/PKN/PKN_genes.txt",header=T,sep="\t")
+geneindex <- strsplit(as.character(genenames[,2]), split = ",") %>% sapply(function(l){gsub(" ","",l)})
+geneindex <- data.frame(V1 = rep(genenames[,1], sapply(geneindex, length)), V2 = unlist(geneindex))
+model_nodes_HUGO <- unique(geneindex[,2]) %>% sub("^\\s+", "", .)
+
+CLinteresting<-c("22RV1","BPH-1","DU-145","LNCaP-Clone-FGC","PC-3","PWR-1E","VCaP","NCI-H660")
+CL_RNA <- read_delim("./Data/CL/RNA_GDSC_gene_attribute_matrix_cleaned.txt", delim="\t")
+# CL_RNA <- read_delim("../../Data/CL/RNA_GDSC_gene_attribute_matrix_cleaned.txt", delim="\t")
+colnames(CL_RNA)[1]<-"Hugo_Symbol"
+CL_RNA %<>% .[grepl("Hugo_Symbol|22RV1|BPH-1|DU-145|LNCaP-Clone-FGC|PC-3|PWR-1E|VCaP|NCI-H660",colnames(.))] %>% tibble_transpose %>% .[,-(2)]
+```
+
+## First descriptive plots
+
+We plot the distributions of Phenotypes across cohort
+
+```{r descriptive, echo=FALSE, message=FALSE}
+
+simulations %>% select(Survival,Cell_cycle,Caspase8,Caspase9) %>% gather(key="Phenotype", value="Score") %>%
+  ggplot() + geom_density(aes(x=Score, fill=Phenotype)) + 
+  facet_grid(~Phenotype) + 
+  labs(title="Distribution of Phenotypes scores across cohort")
+
+sim2<-simulations
+sim2$CL<-rownames(sim2)
+sim2%>% gather(key="Phenotype", value="Score",-c(CL)) %>% ggplot() + geom_point(aes(y=Score,x=CL,colour=CL)) + facet_grid(~Phenotype) + labs(title="Distribution of Phenotypes scores across GDSC prostate cohort")+theme(axis.text.x = element_blank(),axis.ticks.x = element_blank(),axis.title.x = element_blank())+labs(colour="Cell lines")
+ggsave("PKN_CLPhenotypes.png",dpi = 300, type = "cairo",width = 10,height = 6)
+```
+
+## PCA
+
+Is it possible to stratify patients (i.e. infer PAM50 subtype), based on simulation results? Let's have a look on PCA
+
+```{r PCA, echo=FALSE, message=FALSE}
+pca_sim <- prcomp(~.,simulations, na.action = na.omit)
+prop.pca <-  round((pca_sim$sdev^2/sum(pca_sim$sdev^2))*100, digits=1)
+# plot_data <- data.frame(pca_sim$x, Subtype=CL_clin$PAM50[CL_clin$PATIENT_ID %in% rownames(pca_sim$x)])
+plot_data <- merge(pca_sim$x, CL_clin, by.x = "row.names", by.y = "PATIENT_ID")
+plot_data %>% ggplot(aes(PC1, PC2)) + 
+  geom_point(size=1,aes(col=Histology)) + 
+  labs(title="PCA with Simulation Outputs from GDSC prostate",subtitle="With principal components PC1 and PC2 as X and Y axis", x=paste0("PC1 (",prop.pca[1],"%)"), y=paste0("PC2 (",prop.pca[2],"%)")) +
+  theme_bw()
+```
+
