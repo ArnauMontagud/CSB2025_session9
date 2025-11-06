@@ -122,7 +122,8 @@ The notebook contains several hands-on tasks. Highlights:
 
 - **Task 4**: Obtain the profiles of GDSC cell lines to contextualise the PKN Boolean models.
 - **Task 5**: Run MaBoSS simulations on the personalised PKN model for different cell lines.
-- **Task 6**: Version the heatmap figure with the combination of drugs.
+- **Task 6**: Simulate another pair of drugs of your choosing.
+- **Stretch goal**: Version the heatmap figure of the combination of drugs (non-graded task).
 
 ## License
 
