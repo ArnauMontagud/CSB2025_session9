@@ -58,6 +58,10 @@ unar -o ./METABRIC/ ./METABRIC/data_CNA.7z
 unar -o ./METABRIC/ ./METABRIC/data_expression.7z
 ```
 
+# Manually dowload GDSC files from (the link will expire on 6/12/2025):
+https://www.swisstransfer.com/d/c3d4f256-166c-4a5a-bd4b-a37036518e63
+# Copy CNA_GDSC_Gene_level_CN.txt to PROFILE\Data\CL\
+
 #### 3. Python Setup
 
 You can re-use the Python environment setup (using conda) from the previous session or install the required packages
