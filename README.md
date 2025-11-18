@@ -10,6 +10,12 @@ This repository contains the practical material for Session 9 of the Computation
 - `Setting-up.txt` — Installation notes and environment setup instructions
 - `LICENSE` — License information for the repository
 
+## Citation and references
+
+The material was developed at Institut Curie by Pauline Traynard, Jonas Béal and Arnau Montagud based on two papers:
+- Béal, J., Montagud, A., Traynard, P., Barillot, E., & Calzone, L. (2019). "Personalization of logical models with multi-omics data allows clinical stratification of patients". *Frontiers in Physiology*, **9**, 1965. https://doi.org/10.3389/fphys.2018.01965
+- Montagud, A., Béal, J., Tobalina, L., Traynard, P., Subramanian, V., Szalai, B., Alföldi, R., Puskás, L., Valencia, A., Barillot, E., Saez-Rodriguez, J., & Calzone, L. (2022). "Patient-specific Boolean models of signalling networks guide personalised treatments". *eLife*, **11**, e72626. https://doi.org/10.7554/eLife.72626
+
 ## Requirements
 
 To reproduce the analyses in this session, you'll need:
