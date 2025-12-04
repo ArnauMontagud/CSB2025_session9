@@ -130,7 +130,8 @@ cleaning_prob <- function(opt) {
 
 # WT ----
 WT <-
-  list.dirs(path = "./WT_sims", recursive = F) #%>% grep("_00|_AR|_EGF", ., value = TRUE) %>% sub("./WT/", "", .)
+  # list.dirs(path = "./WT_sims", recursive = F) #%>% grep("_00|_AR|_EGF", ., value = TRUE) %>% sub("./WT/", "", .)
+  "./WT_sims"
 
 cond <-
   "Proliferation,Angiogenesis,Invasion,Metastasis,Migration,Glycolysis,Hypermethylation,DNA_Repair,Quiescence,Apoptosis"
