@@ -102,15 +102,6 @@ sudo add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_
 # Install R
 sudo apt install --no-install-recommends r-base
 ```
-
-Note: To verify the R repository key, you can run:
-
-```bash
-gpg --show-keys /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
-```
-
-The fingerprint should be: E298A3A825C0D65DFD57CBB651716619E084DAB9
-
 You will need to install some libraries upon opening the R files.
 
 #### 5. Additional Setup
@@ -139,12 +130,3 @@ The notebook contains several hands-on tasks. Highlights:
 ## License
 
 This repository is released under the BSD 3-Clause License. See `LICENSE` for details.
-
-## Contact / support
-
-If you find issues or need help, open an issue in the repository or contact the course instructor.
-
-## Citation
-
-If you use materials from this repository, please cite:
-[Citation information to be added by course instructors]
